@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.hardware.camera2.CameraCharacteristics;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -42,7 +43,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.btn_detect).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this, "detect", Toast.LENGTH_SHORT).show();
+                showDetectDialog();
             }
         });
     }
@@ -74,6 +75,19 @@ public class MainActivity extends Activity {
                             default:
                                 break;
                         }
+                    }
+                })
+                .show();
+    }
+
+    private void showDetectDialog() {
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle("请选择相机")
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setItems(new String[]{"后置相机", "前置相机"}, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startDetector(which);
                     }
                 })
                 .show();
@@ -116,12 +130,16 @@ public class MainActivity extends Activity {
         Log.d(TAG, "startRegister: " + imgPath);
     }
 
-//    private void startDetector(int camera) {
-//        Intent it = new Intent(MainActivity.this, DetecterActivity.class);
-//        it.putExtra("Camera", camera);
-//        startActivityForResult(it, REQUEST_CODE_OP);
-//    }
+    private void startDetector(int camera) {
+        Intent it = new Intent(MainActivity.this, DetectActivity.class);
+        camera = camera == 0 ? CameraCharacteristics.LENS_FACING_BACK : CameraCharacteristics.LENS_FACING_FRONT;
+        it.putExtra("camera", camera);
+        startActivityForResult(it, REQUEST_CODE_OP);
+    }
 
+    /**
+     * 申请存储权限
+     */
     public void requestPerimission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
