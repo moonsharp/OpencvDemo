@@ -8,7 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -130,11 +130,12 @@ public class MainActivity extends Activity {
         Log.d(TAG, "startRegister: " + imgPath);
     }
 
-    private void startDetector(int camera) {
-        Intent it = new Intent(MainActivity.this, DetectActivity.class);
-        camera = camera == 0 ? CameraCharacteristics.LENS_FACING_BACK : CameraCharacteristics.LENS_FACING_FRONT;
-        it.putExtra("camera", camera);
-        startActivityForResult(it, REQUEST_CODE_OP);
+    private void startDetector(int cameraFacing) {
+//        Intent intent = new Intent(MainActivity.this, DetectActivity.class);
+        Intent intent = new Intent(MainActivity.this, SurfaceDetectActivity.class);
+        cameraFacing = cameraFacing == 0 ? Camera.CameraInfo.CAMERA_FACING_BACK : Camera.CameraInfo.CAMERA_FACING_FRONT;
+        intent.putExtra("camera_facing", cameraFacing);
+        startActivityForResult(intent, REQUEST_CODE_OP);
     }
 
     /**

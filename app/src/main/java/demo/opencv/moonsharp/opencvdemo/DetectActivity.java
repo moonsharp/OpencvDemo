@@ -71,7 +71,7 @@ public class DetectActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detect);
-        mCameraFacing = getIntent().getIntExtra("camera", CameraCharacteristics.LENS_FACING_BACK);
+        mCameraFacing = getIntent().getIntExtra("camera_facing", CameraCharacteristics.LENS_FACING_BACK);
         initView();
     }
 

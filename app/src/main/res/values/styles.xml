@@ -8,4 +8,8 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <declare-styleable name="CameraSurfaceView">
+        <attr name="facing" format="integer" />
+    </declare-styleable>
+
 </resources>
