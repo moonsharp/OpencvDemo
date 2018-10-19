@@ -1,6 +1,10 @@
 package demo.opencv.moonsharp.opencvdemo;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +12,9 @@ import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
+import android.os.Build;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -26,7 +33,6 @@ public class CameraSurfaceView extends SurfaceView implements SurfaceHolder.Call
     private SurfaceHolder mHolder;
     private int screenHeight;//屏幕的高度
     private int screenWidth;//屏幕的宽度
-    private byte[] mPictureData;
 
     /***
      * 是否支持自动对焦
@@ -73,12 +79,24 @@ public class CameraSurfaceView extends SurfaceView implements SurfaceHolder.Call
     }
 
     private void openCamera() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            openCamera1();
+        } else {
+            Toast.makeText(mContext, "Camera2", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void openCamera1() {
         if (null == mSurfaceHolder) {
             Toast.makeText(mContext, "SurfaceHolder null", Toast.LENGTH_LONG).show();
             return;
         }
-        Log.e("yuhao", "openCamera facing: " + mFacing);
         try {
+            //必须先检查权限，否则Camera.open()会报错
+            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                requestPerimission();
+                return;
+            }
             Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
             for (int i = 0; i < Camera.getNumberOfCameras(); i++) {
                 Camera.getCameraInfo(i, cameraInfo);
@@ -234,10 +252,10 @@ public class CameraSurfaceView extends SurfaceView implements SurfaceHolder.Call
         Camera.Size previewSize = camera.getParameters().getPreviewSize();
         YuvImage yuvimage = new YuvImage(data, ImageFormat.NV21, previewSize.width, previewSize.height, null);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        yuvimage.compressToJpeg(new Rect(0, 0, previewSize.width, previewSize.height), 70, baos);
+        yuvimage.compressToJpeg(new Rect(0, 0, previewSize.width, previewSize.height), 50, baos);
         byte[] jpgData = baos.toByteArray();
         Bitmap bitmap = BitmapFactory.decodeByteArray(jpgData, 0, jpgData.length);
-        Bitmap resultBitmap = Utils.rotateBitmap(bitmap, 90);
+        Bitmap resultBitmap = Utils.rotateBitmap(bitmap, mFacing == Camera.CameraInfo.CAMERA_FACING_BACK ? 90 : -90);
         if (null != mCallback && null != resultBitmap) {
             mCallback.onCapture(resultBitmap);
         }
@@ -246,6 +264,31 @@ public class CameraSurfaceView extends SurfaceView implements SurfaceHolder.Call
 
     public void setCaptureCallback(CaptureCallback callback) {
         this.mCallback = callback;
+    }
+
+    /**
+     * 申请相机权限
+     */
+    public void requestPerimission() {
+        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale((Activity) mContext, Manifest.permission.CAMERA)) {
+                new AlertDialog.Builder(mContext)
+                        .setMessage("检测人脸需要相机权限")
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //申请权限，字符串数组内是一个或多个要申请的权限，1是申请权限结果的返回参数，在onRequestPermissionsResult可以得知申请结果
+                                ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.CAMERA,}, 1);
+                            }
+                        }).show();
+            } else {
+                //申请权限，字符串数组内是一个或多个要申请的权限，1是申请权限结果的返回参数，在onRequestPermissionsResult可以得知申请结果
+                ActivityCompat.requestPermissions((Activity) mContext, new String[]{Manifest.permission.CAMERA,}, 1);
+            }
+        } else {
+            //已经拥有权限
+            openCamera();
+        }
     }
 
 }
